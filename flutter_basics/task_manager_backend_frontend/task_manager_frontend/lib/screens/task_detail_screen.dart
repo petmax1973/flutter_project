@@ -64,6 +64,7 @@ class TaskDetailScreen extends StatelessWidget {
                 Navigator.pop(context); // Back to list
               } catch (e) {
                 ScaffoldMessenger.of(
+                  // ignore: use_build_context_synchronously
                   context,
                 ).showSnackBar(SnackBar(content: Text('${l10n.error}: $e')));
               }
