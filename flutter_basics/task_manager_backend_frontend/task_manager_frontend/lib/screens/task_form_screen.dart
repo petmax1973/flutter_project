@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../l10n/app_localizations.dart';
 import '../models/task.dart';
 import '../providers/task_provider.dart';
 
 class TaskFormScreen extends StatefulWidget {
   final Task? task;
 
-  TaskFormScreen({this.task});
+  const TaskFormScreen({super.key, this.task});
 
   @override
   _TaskFormScreenState createState() => _TaskFormScreenState();
@@ -73,77 +74,73 @@ class _TaskFormScreenState extends State<TaskFormScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Scaffold(
-      appBar: AppBar(title: Text(_isEditing ? 'Edit Task' : 'New Task')),
+      appBar: AppBar(
+        title: Text(widget.task == null ? l10n.addTask : l10n.editTask),
+      ),
       body: _isSaving
-          ? Center(child: CircularProgressIndicator())
-          : SingleChildScrollView(
-              padding: EdgeInsets.all(16),
+          ? const Center(child: CircularProgressIndicator())
+          : Padding(
+              padding: const EdgeInsets.all(16.0),
               child: Form(
                 key: _formKey,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                child: ListView(
                   children: [
                     TextFormField(
                       initialValue: _title,
-                      decoration: InputDecoration(labelText: 'Title *'),
+                      decoration: InputDecoration(labelText: l10n.title),
                       validator: (value) {
                         if (value == null || value.isEmpty) {
-                          return 'Please enter a title';
+                          return l10n.fieldRequired;
                         }
                         return null;
                       },
                       onSaved: (value) => _title = value!,
                     ),
-                    SizedBox(height: 16),
+                    const SizedBox(height: 16),
                     TextFormField(
                       initialValue: _description,
-                      decoration: InputDecoration(labelText: 'Description'),
+                      decoration: InputDecoration(labelText: l10n.description),
                       maxLines: 3,
                       onSaved: (value) => _description = value,
                     ),
-                    SizedBox(height: 16),
+                    const SizedBox(height: 16),
                     TextFormField(
                       initialValue: _assignedTo,
-                      decoration: InputDecoration(labelText: 'Assigned To'),
+                      decoration: InputDecoration(labelText: l10n.assignedTo),
                       onSaved: (value) => _assignedTo = value,
                     ),
-                    SizedBox(height: 24),
-                    Text(
-                      'Status',
-                      style: TextStyle(fontWeight: FontWeight.bold),
-                    ),
+                    const SizedBox(height: 16),
                     DropdownButtonFormField<String>(
                       value: _status,
+                      decoration: InputDecoration(labelText: l10n.status),
                       items: [
                         DropdownMenuItem(
                           value: 'pending',
-                          child: Text('Pending'),
+                          child: Text(l10n.statusPending),
                         ),
                         DropdownMenuItem(
                           value: 'in_progress',
-                          child: Text('In Progress'),
+                          child: Text(l10n.statusInProgress),
                         ),
                         DropdownMenuItem(
                           value: 'suspended',
-                          child: Text('Suspended'),
+                          child: Text(l10n.statusSuspended),
                         ),
                         DropdownMenuItem(
                           value: 'to_release',
-                          child: Text('To Release'),
+                          child: Text(l10n.statusToRelease),
                         ),
                         DropdownMenuItem(
                           value: 'completed',
-                          child: Text('Completed'),
+                          child: Text(l10n.statusCompleted),
                         ),
                       ],
                       onChanged: (value) => setState(() => _status = value!),
                     ),
-                    SizedBox(height: 24),
-                    Text(
-                      'Priority: $_priority',
-                      style: TextStyle(fontWeight: FontWeight.bold),
-                    ),
+                    const SizedBox(height: 16),
+                    Text(l10n.priority),
                     Slider(
                       value: _priority.toDouble(),
                       min: 1,
@@ -153,13 +150,13 @@ class _TaskFormScreenState extends State<TaskFormScreen> {
                       onChanged: (value) =>
                           setState(() => _priority = value.round()),
                     ),
-                    SizedBox(height: 32),
+                    const SizedBox(height: 32),
                     SizedBox(
                       width: double.infinity,
                       height: 50,
                       child: ElevatedButton(
-                        child: Text(_isEditing ? 'UPDATE TASK' : 'CREATE TASK'),
                         onPressed: _saveForm,
+                        child: Text(l10n.save),
                       ),
                     ),
                   ],

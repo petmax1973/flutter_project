@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../l10n/app_localizations.dart';
 import '../models/task.dart';
 import '../providers/task_provider.dart';
 import 'task_form_screen.dart';
@@ -7,7 +8,7 @@ import 'task_form_screen.dart';
 class TaskDetailScreen extends StatelessWidget {
   final Task task;
 
-  TaskDetailScreen({required this.task});
+  const TaskDetailScreen({super.key, required this.task});
 
   Color _getStatusColor(String status) {
     switch (status) {
@@ -24,50 +25,50 @@ class TaskDetailScreen extends StatelessWidget {
     }
   }
 
-  String _getStatusLabel(String status) {
+  String _getStatusLabel(String status, AppLocalizations l10n) {
     switch (status) {
-      case 'in_progress':
-        return 'In Progress';
-      case 'suspended':
-        return 'Suspended';
-      case 'to_release':
-        return 'To Release';
-      case 'completed':
-        return 'Completed';
       case 'pending':
-        return 'Pending';
+        return l10n.statusPending;
+      case 'in_progress':
+        return l10n.statusInProgress;
+      case 'suspended':
+        return l10n.statusSuspended;
+      case 'to_release':
+        return l10n.statusToRelease;
+      case 'completed':
+        return l10n.statusCompleted;
       default:
         return status;
     }
   }
 
-  void _confirmDelete(BuildContext context) {
+  void _showDeleteConfirmation(BuildContext context, AppLocalizations l10n) {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: Text('Delete Task?'),
-        content: Text('Are you sure you want to remove this task?'),
+        title: Text(l10n.confirmDelete),
+        content: Text(l10n.deleteWarning),
         actions: [
           TextButton(
-            child: Text('CANCEL'),
             onPressed: () => Navigator.pop(ctx),
+            child: Text(l10n.cancel),
           ),
           TextButton(
-            child: Text('DELETE', style: TextStyle(color: Colors.red)),
             onPressed: () async {
-              Navigator.pop(ctx);
               try {
                 await Provider.of<TaskProvider>(
                   context,
                   listen: false,
                 ).deleteTask(task.id!);
-                Navigator.pop(context);
+                Navigator.pop(ctx); // Close dialog
+                Navigator.pop(context); // Back to list
               } catch (e) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text('Error deleting task: $e')),
-                );
+                ScaffoldMessenger.of(
+                  context,
+                ).showSnackBar(SnackBar(content: Text('${l10n.error}: $e')));
               }
             },
+            child: Text(l10n.delete, style: const TextStyle(color: Colors.red)),
           ),
         ],
       ),
@@ -76,12 +77,13 @@ class TaskDetailScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Scaffold(
       appBar: AppBar(
-        title: Text('Task Details'),
+        title: Text(l10n.taskDetails),
         actions: [
           IconButton(
-            icon: Icon(Icons.edit),
+            icon: const Icon(Icons.edit),
             onPressed: () {
               Navigator.push(
                 context,
@@ -92,60 +94,30 @@ class TaskDetailScreen extends StatelessWidget {
             },
           ),
           IconButton(
-            icon: Icon(Icons.delete),
-            onPressed: () => _confirmDelete(context),
+            icon: const Icon(Icons.delete),
+            onPressed: () => _showDeleteConfirmation(context, l10n),
           ),
         ],
       ),
-      body: SingleChildScrollView(
-        padding: EdgeInsets.all(16),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Expanded(
-                  child: Text(
-                    task.title,
-                    style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-                Container(
-                  padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                  decoration: BoxDecoration(
-                    color: _getStatusColor(task.status).withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: _getStatusColor(task.status)),
-                  ),
-                  child: Text(
-                    _getStatusLabel(task.status),
-                    style: TextStyle(
-                      color: _getStatusColor(task.status),
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-              ],
+            Text(task.title, style: Theme.of(context).textTheme.headlineMedium),
+            const SizedBox(height: 8),
+            Text(
+              task.description ?? '',
+              style: Theme.of(context).textTheme.bodyLarge,
             ),
-            SizedBox(height: 20),
+            const SizedBox(height: 24),
             _DetailItem(
-              label: 'Assigned To',
-              value: task.assignedTo ?? 'Unassigned',
+              label: l10n.status,
+              value: _getStatusLabel(task.status, l10n),
+              valueColor: _getStatusColor(task.status),
             ),
-            _DetailItem(label: 'Priority', value: 'Level ${task.priority}'),
-            SizedBox(height: 20),
-            Text(
-              'Description',
-              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-            ),
-            SizedBox(height: 8),
-            Text(
-              task.description ?? 'No description provided.',
-              style: TextStyle(fontSize: 16),
-            ),
+            _DetailItem(label: l10n.priority, value: task.priority.toString()),
+            _DetailItem(label: l10n.assignedTo, value: task.assignedTo ?? ''),
           ],
         ),
       ),
@@ -156,17 +128,28 @@ class TaskDetailScreen extends StatelessWidget {
 class _DetailItem extends StatelessWidget {
   final String label;
   final String value;
+  final Color? valueColor;
 
-  _DetailItem({required this.label, required this.value});
+  const _DetailItem({
+    required this.label,
+    required this.value,
+    this.valueColor,
+  });
 
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 12.0),
+      padding: const EdgeInsets.symmetric(vertical: 8.0),
       child: Row(
         children: [
-          Text('$label: ', style: TextStyle(fontWeight: FontWeight.bold)),
-          Text(value),
+          Text('$label: ', style: const TextStyle(fontWeight: FontWeight.bold)),
+          Text(
+            value,
+            style: TextStyle(
+              color: valueColor,
+              fontWeight: valueColor != null ? FontWeight.bold : null,
+            ),
+          ),
         ],
       ),
     );

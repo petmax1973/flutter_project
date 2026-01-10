@@ -1,10 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../l10n/app_localizations.dart';
 import '../providers/task_provider.dart';
+import '../providers/language_provider.dart';
 import 'task_form_screen.dart';
 import 'task_detail_screen.dart';
 
 class TaskListScreen extends StatefulWidget {
+  const TaskListScreen({super.key});
+
   @override
   _TaskListScreenState createState() => _TaskListScreenState();
 }
@@ -35,18 +39,18 @@ class _TaskListScreenState extends State<TaskListScreen> {
     }
   }
 
-  String _getStatusLabel(String status) {
+  String _getStatusLabel(String status, AppLocalizations l10n) {
     switch (status) {
-      case 'in_progress':
-        return 'In Progress';
-      case 'suspended':
-        return 'Suspended';
-      case 'to_release':
-        return 'To Release';
-      case 'completed':
-        return 'Completed';
       case 'pending':
-        return 'Pending';
+        return l10n.statusPending;
+      case 'in_progress':
+        return l10n.statusInProgress;
+      case 'suspended':
+        return l10n.statusSuspended;
+      case 'to_release':
+        return l10n.statusToRelease;
+      case 'completed':
+        return l10n.statusCompleted;
       default:
         return status;
     }
@@ -54,12 +58,23 @@ class _TaskListScreenState extends State<TaskListScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Scaffold(
       appBar: AppBar(
-        title: Text('Task Manager'),
+        title: Text(l10n.appTitle),
         actions: [
           IconButton(
-            icon: Icon(Icons.refresh),
+            icon: const Icon(Icons.language),
+            tooltip: 'Language / Lingua',
+            onPressed: () {
+              Provider.of<LanguageProvider>(
+                context,
+                listen: false,
+              ).toggleLanguage();
+            },
+          ),
+          IconButton(
+            icon: const Icon(Icons.refresh),
             onPressed: () =>
                 Provider.of<TaskProvider>(context, listen: false).fetchTasks(),
           ),
@@ -72,8 +87,8 @@ class _TaskListScreenState extends State<TaskListScreen> {
             child: TextField(
               controller: _searchController,
               decoration: InputDecoration(
-                labelText: 'Search tasks...',
-                prefixIcon: Icon(Icons.search),
+                hintText: l10n.search,
+                prefixIcon: const Icon(Icons.search),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(10),
                 ),
@@ -93,18 +108,21 @@ class _TaskListScreenState extends State<TaskListScreen> {
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 4.0),
                   child: ActionChip(
-                    label: Text('Clear All'),
+                    label: Text(l10n.clearAll),
                     onPressed: () => Provider.of<TaskProvider>(
                       context,
                       listen: false,
                     ).clearFilters(),
                   ),
                 ),
-                _FilterChip(label: 'Pending', status: 'pending'),
-                _FilterChip(label: 'In Progress', status: 'in_progress'),
-                _FilterChip(label: 'Suspended', status: 'suspended'),
-                _FilterChip(label: 'To Release', status: 'to_release'),
-                _FilterChip(label: 'Completed', status: 'completed'),
+                _FilterChip(label: l10n.statusPending, status: 'pending'),
+                _FilterChip(
+                  label: l10n.statusInProgress,
+                  status: 'in_progress',
+                ),
+                _FilterChip(label: l10n.statusSuspended, status: 'suspended'),
+                _FilterChip(label: l10n.statusToRelease, status: 'to_release'),
+                _FilterChip(label: l10n.statusCompleted, status: 'completed'),
               ],
             ),
           ),
@@ -112,7 +130,7 @@ class _TaskListScreenState extends State<TaskListScreen> {
             child: Consumer<TaskProvider>(
               builder: (context, provider, child) {
                 if (provider.isLoading) {
-                  return Center(child: CircularProgressIndicator());
+                  return const Center(child: CircularProgressIndicator());
                 }
 
                 if (provider.errorMessage != null) {
@@ -120,7 +138,7 @@ class _TaskListScreenState extends State<TaskListScreen> {
                 }
 
                 if (provider.tasks.isEmpty) {
-                  return Center(child: Text('No tasks found.'));
+                  return Center(child: Text(l10n.noTasks));
                 }
 
                 return ListView.builder(
@@ -141,12 +159,12 @@ class _TaskListScreenState extends State<TaskListScreen> {
                         subtitle: Text(task.assignedTo ?? 'Unassigned'),
                         trailing: Chip(
                           label: Text(
-                            _getStatusLabel(task.status),
-                            style: TextStyle(fontSize: 12),
+                            _getStatusLabel(task.status, l10n),
+                            style: const TextStyle(fontSize: 12),
                           ),
                           backgroundColor: _getStatusColor(
                             task.status,
-                          ).withOpacity(0.1),
+                          ).withAlpha(25),
                         ),
                         onTap: () {
                           Navigator.push(
@@ -167,13 +185,14 @@ class _TaskListScreenState extends State<TaskListScreen> {
         ],
       ),
       floatingActionButton: FloatingActionButton(
-        child: Icon(Icons.add),
         onPressed: () {
           Navigator.push(
             context,
             MaterialPageRoute(builder: (context) => TaskFormScreen()),
           );
         },
+        tooltip: l10n.addTask,
+        child: const Icon(Icons.add),
       ),
     );
   }
@@ -183,7 +202,7 @@ class _FilterChip extends StatelessWidget {
   final String label;
   final String status;
 
-  _FilterChip({required this.label, required this.status});
+  const _FilterChip({required this.label, required this.status});
 
   @override
   Widget build(BuildContext context) {
