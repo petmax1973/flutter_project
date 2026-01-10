@@ -140,15 +140,16 @@ class _TaskFormScreenState extends State<TaskFormScreen> {
                       onChanged: (value) => setState(() => _status = value!),
                     ),
                     const SizedBox(height: 16),
-                    Text(l10n.priority),
-                    Slider(
-                      value: _priority.toDouble(),
-                      min: 1,
-                      max: 5,
-                      divisions: 4,
-                      label: _priority.toString(),
-                      onChanged: (value) =>
-                          setState(() => _priority = value.round()),
+                    DropdownButtonFormField<int>(
+                      value: _priority,
+                      decoration: InputDecoration(labelText: l10n.priority),
+                      items: [1, 2, 3, 4, 5].map((int value) {
+                        return DropdownMenuItem<int>(
+                          value: value,
+                          child: Text(value.toString()),
+                        );
+                      }).toList(),
+                      onChanged: (value) => setState(() => _priority = value!),
                     ),
                     const SizedBox(height: 32),
                     SizedBox(

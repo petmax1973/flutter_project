@@ -101,19 +101,18 @@ class _TaskListScreenState extends State<TaskListScreen> {
               },
             ),
           ),
-          SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: Row(
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8.0),
+            child: Wrap(
+              spacing: 8.0,
+              runSpacing: 4.0,
               children: [
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 4.0),
-                  child: ActionChip(
-                    label: Text(l10n.clearAll),
-                    onPressed: () => Provider.of<TaskProvider>(
-                      context,
-                      listen: false,
-                    ).clearFilters(),
-                  ),
+                ActionChip(
+                  label: Text(l10n.clearAll),
+                  onPressed: () => Provider.of<TaskProvider>(
+                    context,
+                    listen: false,
+                  ).clearFilters(),
                 ),
                 _FilterChip(label: l10n.statusPending, status: 'pending'),
                 _FilterChip(
@@ -209,15 +208,12 @@ class _FilterChip extends StatelessWidget {
     final provider = Provider.of<TaskProvider>(context);
     final isSelected = provider.selectedStatuses.contains(status);
 
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 4.0),
-      child: FilterChip(
-        label: Text(label),
-        selected: isSelected,
-        onSelected: (selected) {
-          provider.toggleStatusFilter(status);
-        },
-      ),
+    return FilterChip(
+      label: Text(label),
+      selected: isSelected,
+      onSelected: (selected) {
+        provider.toggleStatusFilter(status);
+      },
     );
   }
 }

@@ -1,12 +1,17 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:flutter/foundation.dart';
+import 'dart:io' show Platform;
 import '../models/task.dart';
 
 class ApiService {
-  // Use 10.0.2.2 for Android Emulator to access localhost of the machine
-  // Use localhost for Web and macOS
-  // For simplicity, we can use a configurable base URL
-  static const String baseUrl = 'http://127.0.0.1:8000';
+  static String get baseUrl {
+    if (kIsWeb) return 'http://localhost:8000';
+    try {
+      if (Platform.isAndroid) return 'http://10.0.2.2:8000';
+    } catch (_) {}
+    return 'http://127.0.0.1:8000';
+  }
 
   Future<List<Task>> getTasks({List<String>? statuses, String? query}) async {
     final Map<String, String> queryParams = {};
